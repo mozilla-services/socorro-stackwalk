@@ -22,11 +22,21 @@ This is the repository for building rust-minidump minidump-stackwalk for
 Once you've built stackwalker, you can use it. It'll be in
 `build/bin/minidump-stackwalk`.
 
-If you have [crashstats-tools](https://pypi.org/project/crashstats-tools/) installed and a `CRASHSTATS_API_TOKEN`, then you can test your stackwalk binary with `bin/run_mdsw.sh CRASHID`.
+If you have [crashstats-tools](https://pypi.org/project/crashstats-tools/)
+installed and a `CRASHSTATS_API_TOKEN`, then you can test your stackwalk binary
+with `bin/run_mdsw.sh CRASHID`.
 
 
 # Submitting bugs
 
-Don't submit bugs here--this is just a repository for building a binary for using in Socorro.
+Don't submit bugs here--this is just a repository for building a binary for
+using in Socorro.
 
 Submit bugs in the [rust-minidump repo](https://github.com/rust-minidump/rust-minidump).
+
+
+# Submitting patches
+
+All changes must be approved by a code owner.
+
+Patches are manually verified and tested. At some point, we will change this.
