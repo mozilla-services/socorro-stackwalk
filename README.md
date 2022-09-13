@@ -1,7 +1,7 @@
 # README
 
 This is the repository for building rust-minidump minidump-stackwalk for
-Socorro.
+[Socorro](https://github.com/mozilla-services/socorro).
 
 
 # Building
