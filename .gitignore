@@ -1,0 +1,4 @@
+build/
+releases/
+my.env
+.docker-build
