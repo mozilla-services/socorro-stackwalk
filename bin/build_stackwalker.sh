@@ -25,7 +25,7 @@ TARFILE="socorro-stackwalker.${MINIDUMPREVDATE}.${MINIDUMPREV}.tar.gz"
 rustc -vV
 
 # Build the specific version we want of minidump-stackwalk
-echo ">>> compiling minidump-stackwalk ..."
+echo ">>> compiling minidump-stackwalk sha ${MINIDUMPREV} ${MINIDUMPREVDATE} ..."
 cargo install --locked \
     --target=x86_64-unknown-linux-gnu \
     --root=./build/ \
