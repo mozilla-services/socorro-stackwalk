@@ -67,7 +67,10 @@ Patches are manually verified and tested. At some point, we will change this.
    ```
    $ make clean
    $ make build
+   $ make shell
+   (in container)$ ./bin/build_stackwalker.sh
    ```
+   The .tar.gz file is now in `releases/` directory.
 3. Push tag to github:
    ```
    $ git push --tags REMOTE main
