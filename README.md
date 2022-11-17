@@ -40,3 +40,36 @@ Submit bugs in the [rust-minidump repo](https://github.com/rust-minidump/rust-mi
 All changes must be approved by a code owner.
 
 Patches are manually verified and tested. At some point, we will change this.
+
+
+# Release
+
+1. Tag main tip:
+   ```
+   $ git tag -s vYYYYMMDD.N
+   ```
+   For example:
+   ```
+   $ git tag -s v20220803.0
+   ```
+   In tag comment include link to rust-minidump sha or tag.
+
+   For example:
+   ```
+   v20220830.0
+
+   This is the initial packaging for rust-minidump for Socorro. It's
+   f9933c36 which corresponds with the v0.14.0 release.
+
+   https://github.com/rust-minidump/rust-minidump/releases/tag/0.14.0
+   ```
+2. Build release:
+   ```
+   $ make clean
+   $ make build
+   ```
+3. Push tag to github:
+   ```
+   $ git push --tags REMOTE main
+   ```
+4. Make a release on github and upload the release .tar.gz file.
