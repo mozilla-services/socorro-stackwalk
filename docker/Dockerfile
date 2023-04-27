@@ -1,5 +1,5 @@
 # https://hub.docker.com/_/rust/
-FROM rust:1.65.0-bullseye@sha256:6c20d87766142d058f3e21874fe1db426c49ce3e1575c8c300fdc27d06db92a9
+FROM rust:1.69.0-bullseye@sha256:0996206db384a076bbd96411eb738047b1d978d41e0184cb5ebcb37edf988362
 
 ARG groupid=10001
 ARG userid=10001
