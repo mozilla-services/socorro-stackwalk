@@ -13,7 +13,8 @@ export
 APP_UID ?= 10001
 APP_GID ?= 10001
 
-DC := $(shell which docker-compose)
+DOCKER := $(shell which docker)
+DC=${DOCKER} compose
 
 .DEFAULT_GOAL := help
 .PHONY: help
