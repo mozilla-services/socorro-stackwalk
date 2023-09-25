@@ -35,6 +35,7 @@ fi
 hash fetch-data 2>/dev/null || { echo >&2 "fetch-data is not installed. Run 'pip install crashstats-tools'. Exiting."; exit 1; }
 
 mkdir "${DATADIR}" || true
+mkdir "${SYMBOLS_CACHE}" || true
 
 for CRASHID in "$@"
 do
