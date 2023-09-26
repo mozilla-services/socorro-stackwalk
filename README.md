@@ -29,10 +29,11 @@ with `bin/run_mdsw.sh CRASHID`.
 
 # Submitting bugs
 
-Don't submit bugs here--this is just a repository for building a binary for
-using in Socorro.
+Submit bugs for the socorro-stackwalker build and test scripts in
+[bugzilla](https://bugzilla.mozilla.org/enter_bug.cgi?format=__standard__&product=Socorro&component=General).
 
-Submit bugs in the [rust-minidump repo](https://github.com/rust-minidump/rust-minidump).
+Submit bugs for the stackwalker in
+[rust-minidump repo](https://github.com/rust-minidump/rust-minidump/issues).
 
 
 # Submitting patches
@@ -40,6 +41,38 @@ Submit bugs in the [rust-minidump repo](https://github.com/rust-minidump/rust-mi
 All changes must be approved by a code owner.
 
 Patches are manually verified and tested. At some point, we will change this.
+
+
+# Regression testing
+
+Create a Python virtual environment and install the requirements from
+`requirements-dev.txt`.
+
+To regression test changes:
+
+1. Build the stackwalker with the main branch.
+
+2. Build a file consisting of crash ids from Crash Stats:
+
+   ```
+   $ supersearch --crash_report_keys=upload_file_minidump --num=20 > crashids.txt
+   ```
+
+3. Run regression tests on it:
+
+   ```
+   $ ./bin/generate_regression_data.py crashids.txt
+   ```
+
+4. Make the changes to the stackwalker you're making.
+
+5. Run regression tests on it again.
+
+6. Compare timings and sizes.
+
+   ```
+   $ ./bin/regression_stats.py regr/<FIRSTDIR> regr/<SECONDDIR>
+   ```
 
 
 # Release
