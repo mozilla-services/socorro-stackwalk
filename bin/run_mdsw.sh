@@ -16,6 +16,7 @@ STACKWALKER="./build/bin/minidump-stackwalk"
 
 # This will pull symbols from the symbols server
 SYMBOLS="--symbols-url=https://symbols.mozilla.org"
+SYMBOLS_CACHE="./symbols_cache"
 
 # This will pull symbols from disk
 # SYMBOLS="--symbols-path=/app/symbols/
@@ -38,21 +39,21 @@ mkdir "${DATADIR}" || true
 for CRASHID in "$@"
 do
     # Pull down the data for the crash if we don't have it, yet
-    if [ ! -f "${DATADIR}/v1/dump/$CRASHID" ]; then
+    if [ ! -f "${DATADIR}/v1/dump/${CRASHID}" ]; then
         echo "Fetching crash data..."
-        fetch-data --raw --dumps "${DATADIR}" $CRASHID
+        fetch-data --raw --dumps "${DATADIR}" "${CRASHID}"
     fi
 
     # Find the raw crash file
-    RAWCRASHFILE=$(find ${DATADIR}/raw_crash/ -name $CRASHID -type f)
+    RAWCRASHFILE=$(find "${DATADIR}/raw_crash/" -name "${CRASHID}" -type f)
 
     timeout -s KILL 600 "${STACKWALKER}" \
-        --evil-json=$RAWCRASHFILE \
-        --symbols-cache=/tmp/symbols/cache \
-        --symbols-tmp=/tmp/symbols/tmp \
+        --evil-json="${RAWCRASHFILE}" \
+        --symbols-cache="${SYMBOLS_CACHE}/cache" \
+        --symbols-tmp="${SYMBOLS_CACHE}/tmp" \
         --no-color \
-        ${SYMBOLS} \
+        "${SYMBOLS}" \
         --json \
         --verbose=error \
-        ${DATADIR}/upload_file_minidump/$CRASHID
+        "${DATADIR}/upload_file_minidump/${CRASHID}"
 done
