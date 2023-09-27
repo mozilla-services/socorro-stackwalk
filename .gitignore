@@ -1,4 +1,7 @@
 build/
 releases/
-my.env
+regr/
+symbols_cache/
+
 .docker-build
+my.env

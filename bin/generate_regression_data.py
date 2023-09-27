@@ -21,24 +21,39 @@ import time
 import click
 
 
-DATADIR = pathlib.Path("crashdata_mdsw_tmp")
 SYMBOLS_CACHE = pathlib.Path("symbols_cache")
 STACKWALKER = pathlib.Path("build", "bin", "minidump-stackwalk")
 SYMBOLS_URL = "https://symbols.mozilla.org"
+NUM_TIMES = 5
 
 
 class ProcessError(Exception):
     pass
 
 
-def fetch_data(datadir, crashid):
+def get_raw_crash_path(crashdata_dir, crashid):
+    return f"{crashdata_dir}/raw_crash/20{crashid[-6:]}/{crashid}"
+
+
+def get_dump_path(crashdata_dir, crashid):
+    return f"{crashdata_dir}/upload_file_minidump/{crashid}"
+
+
+def fetch_data(crashdata_dir, crashid):
     """Fetch raw crash and minidump from Crash Stats."""
+    raw_crash = get_raw_crash_path(crashdata_dir, crashid)
+    dump = get_dump_path(crashdata_dir, crashid)
+
+    if os.path.exists(raw_crash) and os.path.exists(dump):
+        click.echo(f"Already fetched {raw_crash} and {dump}")
+        return
+
     ret = subprocess.run(
         [
             "fetch-data",
             "--raw",
             "--dumps",
-            datadir,
+            crashdata_dir,
             crashid,
         ],
         capture_output=True,
@@ -73,15 +88,17 @@ def symbolscache_size(symbolscache):
     return int(output.split("\t")[0])
 
 
-def run_mdsw(stackwalker, datadir, symbolsurl, symbolscache, output_file, crashid):
+def run_mdsw(
+    stackwalker, crashdata_dir, symbolsurl, symbolscache, output_file, crashid
+):
     """Runs stackwalker on crash data."""
-    raw_file = f"{datadir}/raw_crash/20{crashid[-6:]}/{crashid}"
-    dump_file = f"{datadir}/upload_file_minidump/{crashid}"
+    raw_crash = get_raw_crash_path(crashdata_dir, crashid)
+    dump = get_dump_path(crashdata_dir, crashid)
 
     ret = subprocess.run(
         [
             str(stackwalker),
-            f"--evil-json={raw_file}",
+            f"--evil-json={raw_crash}",
             f"--symbols-cache={symbolscache}/cache",
             f"--symbols-tmp={symbolscache}/tmp",
             "--no-color",
@@ -89,7 +106,7 @@ def run_mdsw(stackwalker, datadir, symbolsurl, symbolscache, output_file, crashi
             f"--output-file={output_file}",
             "--json",
             "--verbose=error",
-            dump_file,
+            dump,
         ],
         capture_output=True,
     )
@@ -100,7 +117,9 @@ def run_mdsw(stackwalker, datadir, symbolsurl, symbolscache, output_file, crashi
         raise ProcessError(f"stackwalker: stdout: {stdout} stderr: {stderr}")
 
 
-def process_crashid(stackwalker, regr_dir, datadir, symbolsurl, symbolscache, crashid):
+def process_crashid(
+    stackwalker, regr_dir, crashdata_dir, symbolsurl, symbolscache, crashid
+):
     """Processes a crashid generating test data."""
     output_dir = regr_dir / "nocache"
     output_dir.mkdir(exist_ok=True)
@@ -110,8 +129,8 @@ def process_crashid(stackwalker, regr_dir, datadir, symbolsurl, symbolscache, cr
     row = [crashid]
 
     # Run stackwalker and append times
-    for i in range(5):
-        click.echo(f"nocache ({i+1}/5) ...")
+    for i in range(NUM_TIMES):
+        click.echo(f"nocache ({i+1}/{NUM_TIMES}) ...")
         subprocess.run(["rm", "-rf", str(symbolscache)])
         symbolscache.mkdir()
         (symbolscache / "tmp").mkdir()
@@ -120,7 +139,7 @@ def process_crashid(stackwalker, regr_dir, datadir, symbolsurl, symbolscache, cr
         start_time = time.time()
         run_mdsw(
             stackwalker=str(stackwalker),
-            datadir=str(datadir),
+            crashdata_dir=str(crashdata_dir),
             symbolsurl=symbolsurl,
             symbolscache=str(symbolscache),
             output_file=str(output_file),
@@ -152,12 +171,12 @@ def process_crashid(stackwalker, regr_dir, datadir, symbolsurl, symbolscache, cr
     row = [crashid]
 
     # Run stackwalker and append times
-    for i in range(5):
-        click.echo(f"cache ({i+1}/5) ...")
+    for i in range(NUM_TIMES):
+        click.echo(f"cache ({i+1}/{NUM_TIMES}) ...")
         start_time = time.time()
         run_mdsw(
             stackwalker=str(stackwalker),
-            datadir=str(datadir),
+            crashdata_dir=str(crashdata_dir),
             symbolsurl=symbolsurl,
             symbolscache=str(symbolscache),
             output_file=str(output_file),
@@ -199,13 +218,14 @@ def main(ctx, crashidfile):
 
     now = datetime.datetime.now()
 
-    regr_dir = pathlib.Path("regr") / now.strftime("%Y%m%d_%H%M%S")
+    regr_root = pathlib.Path("regr")
+    regr_dir = regr_root / now.strftime("%Y%m%d_%H%M%S")
     regr_dir.mkdir(parents=True, exist_ok=True)
 
     click.echo(f"Using {regr_dir}")
 
-    datadir = DATADIR
-    datadir.mkdir(parents=True, exist_ok=True)
+    crashdata_dir = regr_root / "crashdata"
+    crashdata_dir.mkdir(parents=True, exist_ok=True)
 
     with open(crashidfile, "r") as fp:
         crashids = fp.readlines()
@@ -218,13 +238,13 @@ def main(ctx, crashidfile):
             continue
 
         click.echo(f">>> Working on {crashid} ...")
-        fetch_data(datadir=str(datadir), crashid=crashid)
+        fetch_data(crashdata_dir=str(crashdata_dir), crashid=crashid)
 
         try:
             process_crashid(
                 stackwalker=stackwalker,
                 regr_dir=regr_dir,
-                datadir=datadir,
+                crashdata_dir=crashdata_dir,
                 symbolsurl=SYMBOLS_URL,
                 symbolscache=SYMBOLS_CACHE,
                 crashid=crashid,
