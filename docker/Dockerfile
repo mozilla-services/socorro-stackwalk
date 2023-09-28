@@ -1,5 +1,7 @@
 # https://hub.docker.com/_/rust/
-FROM rust:1.72.1-bookworm@sha256:6a2ac38604fce995fd586c8d760147f71d9113dcbe84a7fcddcb30c60a1ec7ee
+# NOTE(willkg): we want to use an older debian image so that we're not locked
+# into a newer glibc
+FROM rust:1.72.1-bullseye@sha256:6562d50b62366d5b9db92b34c6684fab5bf3b9f627e59a863c9c0675760feed4
 
 ARG groupid=10001
 ARG userid=10001
