@@ -13,10 +13,10 @@ set -euo pipefail
 
 DATADIR=./crashdata_mdsw_tmp
 STACKWALKER="./build/bin/minidump-stackwalk"
+SYMBOLSCACHE="./symbols_cache"
 
 # This will pull symbols from the symbols server
-SYMBOLS="--symbols-url=https://symbols.mozilla.org"
-SYMBOLS_CACHE="./symbols_cache"
+SYMBOLS="--symbols-url=https://symbols.mozilla.org/try"
 
 # This will pull symbols from disk
 # SYMBOLS="--symbols-path=/app/symbols/
@@ -35,12 +35,13 @@ fi
 hash fetch-data 2>/dev/null || { echo >&2 "fetch-data is not installed. Run 'pip install crashstats-tools'. Exiting."; exit 1; }
 
 mkdir "${DATADIR}" || true
-mkdir "${SYMBOLS_CACHE}" || true
+mkdir -p "${SYMBOLSCACHE}/cache" || true
+mkdir -p "${SYMBOLSCACHE}/tmp" || true
 
 for CRASHID in "$@"
 do
     # Pull down the data for the crash if we don't have it, yet
-    if [ ! -f "${DATADIR}/v1/dump/${CRASHID}" ]; then
+    if [ ! -f "${DATADIR}/upload_file_minidump/${CRASHID}" ]; then
         echo "Fetching crash data..."
         fetch-data --raw --dumps "${DATADIR}" "${CRASHID}"
     fi
@@ -48,13 +49,15 @@ do
     # Find the raw crash file
     RAWCRASHFILE=$(find "${DATADIR}/raw_crash/" -name "${CRASHID}" -type f)
 
-    timeout -s KILL 600 "${STACKWALKER}" \
+    "${STACKWALKER}" \
         --evil-json="${RAWCRASHFILE}" \
-        --symbols-cache="${SYMBOLS_CACHE}/cache" \
-        --symbols-tmp="${SYMBOLS_CACHE}/tmp" \
+        --symbols-cache="${SYMBOLSCACHE}/cache" \
+        --symbols-tmp="${SYMBOLSCACHE}/tmp" \
         --no-color \
-        "${SYMBOLS}" \
+        ${SYMBOLS} \
+        --output-file="${CRASHID}.dump.json" \
+        --log-file="${CRASHID}.dump.log" \
         --json \
-        --verbose=error \
+        --verbose=debug \
         "${DATADIR}/upload_file_minidump/${CRASHID}"
 done
