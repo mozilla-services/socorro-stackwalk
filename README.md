@@ -64,9 +64,11 @@ To regression test changes:
    $ ./bin/generate_regression_data.py crashids.txt
    ```
 
+   This takes 30-40 minutes to run.
+
 4. Make the changes to the stackwalker you're making.
 
-5. Run regression tests on it again.
+5. Run regression tests on it again. Again, it takes 30-40 minutes to run.
 
 6. Compare timings and sizes.
 

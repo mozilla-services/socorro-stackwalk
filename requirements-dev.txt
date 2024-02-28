@@ -1,3 +1,4 @@
 click
+crashstats_tools
 requests
 rich

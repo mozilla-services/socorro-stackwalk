@@ -130,7 +130,7 @@ def process_crashid(
 
     # Run stackwalker and append times
     for i in range(NUM_TIMES):
-        click.echo(f"nocache ({i+1}/{NUM_TIMES}) ...")
+        click.echo(f"nocache ({i+1}/{NUM_TIMES}) ... ", nl=False)
         subprocess.run(["rm", "-rf", str(symbolscache)])
         symbolscache.mkdir()
         (symbolscache / "tmp").mkdir()
@@ -146,7 +146,9 @@ def process_crashid(
             crashid=crashid,
         )
         end_time = time.time()
-        row.append(str(int(end_time - start_time)))
+        delta = int(end_time - start_time)
+        click.echo(f"{delta}s")
+        row.append(str(delta))
 
     # Append symbols cache size
     row.append(str(symbolscache_size(str(symbolscache))))
@@ -172,7 +174,7 @@ def process_crashid(
 
     # Run stackwalker and append times
     for i in range(NUM_TIMES):
-        click.echo(f"cache ({i+1}/{NUM_TIMES}) ...")
+        click.echo(f"cache ({i+1}/{NUM_TIMES}) ... ", nl=False)
         start_time = time.time()
         run_mdsw(
             stackwalker=str(stackwalker),
@@ -183,7 +185,9 @@ def process_crashid(
             crashid=crashid,
         )
         end_time = time.time()
-        row.append(str(int(end_time - start_time)))
+        delta = int(end_time - start_time)
+        click.echo(f"{delta}s")
+        row.append(str(delta))
 
     # Append symbols cache size
     row.append(str(symbolscache_size(str(symbolscache))))
