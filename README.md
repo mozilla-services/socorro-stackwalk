@@ -45,6 +45,9 @@ Patches are manually verified and tested. At some point, we will change this.
 
 # Regression testing
 
+This requires a `CRASHSTATS_API_TOKEN` with the "View Raw Dumps" and "View Personal Identifiable
+Information" permissions.
+
 Create a Python virtual environment and install the requirements from
 `requirements-dev.txt`.
 
