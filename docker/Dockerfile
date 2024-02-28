@@ -9,6 +9,8 @@ ARG userid=10001
 
 WORKDIR /app/
 
+RUN apt update && apt install -y python3-venv
+
 RUN update-ca-certificates && \
     groupadd --gid $groupid app && \
     useradd -g app --uid $userid --shell /usr/sbin/nologin --create-home app && \
