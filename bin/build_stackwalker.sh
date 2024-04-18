@@ -22,10 +22,16 @@ TARFILE="socorro-stackwalker.${MINIDUMPREVDATE}.${MINIDUMPREV}.tar.gz"
 # Print versions for debugging
 rustc -vV
 
+# Make sure Apple Silicon arch target is installed
+rustup target add aarch64-apple-darwin
+
+# TARGET="x86_64-unknown-linux-gnu"
+TARGET="aarch64-apple-darwin"
+
 # Build the specific version we want of minidump-stackwalk
 echo ">>> compiling minidump-stackwalk sha ${MINIDUMPREV} ${MINIDUMPREVDATE} ..."
 cargo install --locked \
-    --target=x86_64-unknown-linux-gnu \
+    --target=$TARGET \
     --root=./build/ \
     --git https://github.com/rust-minidump/rust-minidump.git \
     --rev $MINIDUMPREV \
