@@ -5,3 +5,6 @@ symbols_cache/
 
 .docker-build
 my.env
+.env
+uv.lock
+.venv
