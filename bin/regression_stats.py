@@ -39,8 +39,8 @@ class Timing:
             output_file=output_file,
         )
 
-    def time(self):
-        return max(self.times)
+    def best_time(self):
+        return min(self.times)
 
 
 def stats_regr(d):
@@ -55,7 +55,7 @@ def stats_regr(d):
     for timing in nocache_timings:
         click.echo(
             f"{timing.crashid} -> "
-            + f"{timing.time()}s  "
+            + f"{timing.best_time()}s  "
             + f"cache:{timing.cache_size:,}b  "
             + f"output:{timing.output_size:,}b"
         )
@@ -70,7 +70,7 @@ def stats_regr(d):
     for timing in cache_timings:
         click.echo(
             f"{timing.crashid} -> "
-            + f"{timing.time()}s  "
+            + f"{timing.best_time()}s  "
             + f"cache:{timing.cache_size:,}kb  "
             + f"output:{timing.output_size:,}b"
         )
@@ -98,11 +98,11 @@ def compare_regr(d1, d2):
     table = Table(show_edge=False, show_header=True, show_lines=False, box=None)
     table.add_column("crashid")
 
-    table.add_column("run1 time")
+    table.add_column("run1 best time")
     table.add_column("cache size")
     table.add_column("output size")
 
-    table.add_column("run2 time")
+    table.add_column("run2 best time")
     table.add_column("cache size")
     table.add_column("output size")
 
@@ -126,7 +126,7 @@ def compare_regr(d1, d2):
 
         row = [key]
         pairs = [
-            str_and_colorize(max(timing1.times), max(timing2.times)),
+            str_and_colorize(timing1.best_time(), timing2.best_time()),
             str_and_colorize(timing1.cache_size, timing2.cache_size),
             str_and_colorize(timing1.output_size, timing2.output_size),
         ]
