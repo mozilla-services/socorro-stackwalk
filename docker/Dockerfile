@@ -1,8 +1,5 @@
 # https://hub.docker.com/_/rust/
-# NOTE(willkg): we want to use bullseye debian image so that we're not locked
-# into a newer glibc which doesn't work with docker in our infrastructure.
-# We can update to a newer debian image once we've moved to GCP.
-FROM rust:1.76.0-bullseye@sha256:b3ec72b36c32f9c2437714354fadf2d05988acd3333699145e0a539c524bde99
+FROM rust:1.84.1-bookworm@sha256:738ae99a3d75623f41e6882566b4ef37e38a9840244a47efd4a0ca22e9628b88
 
 ARG groupid=10001
 ARG userid=10001
