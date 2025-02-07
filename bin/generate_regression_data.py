@@ -74,6 +74,7 @@ def symbolscache_size(symbolscache):
     ret = subprocess.run(
         [
             "du",
+            "--apparent-size",
             "-ks",
             symbolscache,
         ],
