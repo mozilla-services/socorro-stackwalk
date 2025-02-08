@@ -66,26 +66,12 @@ def fetch_data(crashdata_dir, crashid):
 
 
 def symbolscache_size(symbolscache):
-    """Return size of symbols cache directory.
-
-    Uses "du" command.
-
-    """
-    ret = subprocess.run(
-        [
-            "du",
-            "-ks",
-            symbolscache,
-        ],
-        capture_output=True,
+    """Return size of symbols cache directory in bytes."""
+    return sum(
+        os.path.getsize(os.path.join(root, file))
+        for root, dirs, files in os.walk(symbolscache)
+        for file in files
     )
-    if ret.returncode != 0:
-        stdout = ret.stdout.decode("utf-8")
-        stderr = ret.stderr.decode("utf-8")
-        raise ProcessError(f"du: stdout: {stdout} stderr: {stderr}")
-
-    output = ret.stdout.decode("utf-8")
-    return int(output.split("\t")[0])
 
 
 def run_mdsw(
