@@ -14,8 +14,8 @@
 set -euo pipefail
 
 # From: https://github.com/rust-minidump/rust-minidump
-MINIDUMPREV=v0.26.0
-MINIDUMPREVDATE=2025-06-20
+MINIDUMPREV=v0.27.0
+MINIDUMPREVDATE=2026-08-11
 
 TARFILE="socorro-stackwalker.${MINIDUMPREVDATE}.${MINIDUMPREV}.tar.gz"
 
