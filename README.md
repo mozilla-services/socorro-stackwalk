@@ -1,6 +1,6 @@
 # README
 
-This is the repository for building rust-minidump minidump-stackwalk for
+This is the repository for building minidump-stackwalk and symbolicate-stacks tools for
 [Socorro](https://github.com/mozilla-services/socorro).
 
 
@@ -10,21 +10,19 @@ This is the repository for building rust-minidump minidump-stackwalk for
 
 1. `make build` builds the Docker container for building
 2. `make shell` gets you into a shell in the Docker container
-3. `bin/build_stackwalker.sh` builds stackwalker and puts a release in `releases/`
+3. `bin/build_release.sh` builds the tools and puts a release in `releases/`
 
 ## Without docker:
 
-1. `bin/build_stackwalker.sh` builds stackwalker and puts a release in `releases/`
+1. `bin/build_release.sh` builds the tools and puts a release in `releases/`
 
 
 # Using
 
-Once you've built stackwalker, you can use it. It'll be in
-`build/bin/minidump-stackwalk`.
+Once you've built the tools, you can use them. They'll be in `build/bin/`.
 
-If you have [crashstats-tools](https://pypi.org/project/crashstats-tools/)
-installed and a `CRASHSTATS_API_TOKEN`, then you can test your stackwalk binary
-with `bin/run_mdsw.sh CRASHID`.
+If you have [crashstats-tools](https://pypi.org/project/crashstats-tools/) installed and a
+`CRASHSTATS_API_TOKEN`, then you can test the stackwalker with `bin/run_mdsw.sh CRASHID`.
 
 
 # Submitting bugs
@@ -53,7 +51,7 @@ Create a Python virtual environment and install the requirements from
 
 To regression test changes:
 
-1. Build the stackwalker with the main branch.
+1. Build the tools with the main branch.
 
 2. Build a file consisting of crash ids from Crash Stats:
 
@@ -69,7 +67,7 @@ To regression test changes:
 
    This takes 30-40 minutes to run.
 
-4. Make the changes to the stackwalker you're making.
+4. Make the changes to the tools (version updates, patches, etc).
 
 5. Run regression tests on it again. Again, it takes 30-40 minutes to run.
 
@@ -106,7 +104,7 @@ To regression test changes:
    $ make clean
    $ make build
    $ make shell
-   (in container)$ ./bin/build_stackwalker.sh
+   (in container)$ ./bin/build_release.sh
    ```
    The .tar.gz file is now in `releases/` directory.
 3. Push tag to github:
