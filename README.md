@@ -22,7 +22,8 @@ This is the repository for building minidump-stackwalk and symbolicate-stacks to
 Once you've built the tools, you can use them. They'll be in `build/bin/`.
 
 If you have [crashstats-tools](https://pypi.org/project/crashstats-tools/) installed and a
-`CRASHSTATS_API_TOKEN`, then you can test the stackwalker with `bin/run_mdsw.sh CRASHID`.
+`CRASHSTATS_API_TOKEN`, then you can test the stackwalker with `bin/run_mdsw.sh CRASHID` and the
+symbolicator with `bin/run_symbolicate.sh CRASHID`.
 
 
 # Submitting bugs
