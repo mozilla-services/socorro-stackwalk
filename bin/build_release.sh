@@ -18,8 +18,8 @@ MINIDUMPREV=v0.27.0
 MINIDUMPREVDATE=2026-08-11
 
 # From: https://github.com/mozilla/symbolicate-stacks
-SYMBOLICATEREV=0.2.0
-SYMBOLICATEREVDATE=2026-10-02
+SYMBOLICATEREV=0.3.0
+SYMBOLICATEREVDATE=2026-11-16
 
 ./bin/build_rust.sh minidump-stackwalk https://github.com/rust-minidump/rust-minidump.git $MINIDUMPREV $MINIDUMPREVDATE
 ./bin/build_rust.sh symbolicate-stacks https://github.com/mozilla/symbolicate-stacks.git $SYMBOLICATEREV $SYMBOLICATEREVDATE

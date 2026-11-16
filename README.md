@@ -56,7 +56,7 @@ To regression test changes:
 2. Build a file consisting of crash ids from Crash Stats:
 
    ```
-   $ supersearch --crash_report_keys=upload_file_minidump --num=20 > crashids.txt
+   $ supersearch --crash_report_keys=StackTraces --crash_report_keys=upload_file_minidump --num=20 > crashids.txt
    ```
 
 3. Run regression tests on it:
