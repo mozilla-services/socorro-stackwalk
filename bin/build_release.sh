@@ -15,18 +15,26 @@ set -euo pipefail
 
 DIR=$(dirname $0)
 
+source $DIR/utils.sh
+
 # From: https://github.com/rust-minidump/rust-minidump
 MINIDUMP_REV=v0.27.0
 
 # From: https://github.com/mozilla/symbolicate-stacks
 SYMBOLICATE_REV=0.3.0
 
+if [ -n "$(git status --porcelain)" ]; then
+    >&2 echo "working directory not clean: refusing to create release"
+    exit 1
+fi
+
 $DIR/build_rust_bin_and_version.sh https://github.com/rust-minidump/rust-minidump.git $MINIDUMP_REV minidump-stackwalk 
 $DIR/build_rust_bin_and_version.sh https://github.com/mozilla/symbolicate-stacks.git $SYMBOLICATE_REV symbolicate-stacks 
 
-DATE=$(date +%F)
+RELEASE_REV=$(git rev-parse --short HEAD)
+RELEASE_DATE=$(git-commit-date .)
 
-TARFILE="socorro-stackwalker.${DATE}.tar.gz"
+TARFILE="socorro-stackwalker-${RELEASE_REV}.${RELEASE_DATE}.tar.gz"
 
 # Print everything out to make sure it looks right
 find ./build -type f -exec 'ls' '-l' '{}' ';'
