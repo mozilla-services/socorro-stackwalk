@@ -1,4 +1,5 @@
 build/
+crashdata_tmp/
 releases/
 regr/
 symbols_cache/

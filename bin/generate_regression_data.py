@@ -127,7 +127,7 @@ class Test(ABC):
             with open(str(self.test.timing_file), "a") as fp:
                 fp.write(",".join(row) + "\n")
 
-    def create(self, crashid) -> type[TestInstance]:
+    def create(self, crashid) -> type[Test.Instance]:
         return self.__class__.Instance(self, crashid)
 
 

@@ -30,9 +30,6 @@ windows = ["${SYMBOLS_URL}"]
 directory = "${SYMBOLSCACHE}"
 EOF
 
-# This will pull symbols from disk
-# SYMBOLS="--symbols-path=/app/symbols/
-
 if [[ $# -eq 0 ]]; then
     if [ -t 0 ]; then
         # If stdin is a terminal, then there's no input

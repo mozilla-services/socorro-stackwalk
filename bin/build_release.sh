@@ -6,23 +6,23 @@
 
 # Usage: ./bin/build_release.sh
 #
-# Builds the binaries, puts artifacts in in build/, and creates a release
+# Builds the binaries, puts artifacts in build/, and creates a release
 # .tar.gz file.
 #
 # Note: This should be called from inside a container.
 
 set -euo pipefail
 
+DIR=$(dirname $0)
+
 # From: https://github.com/rust-minidump/rust-minidump
-MINIDUMPREV=v0.27.0
-MINIDUMPREVDATE=2026-08-11
+MINIDUMP_REV=v0.27.0
 
 # From: https://github.com/mozilla/symbolicate-stacks
-SYMBOLICATEREV=0.3.0
-SYMBOLICATEREVDATE=2026-11-16
+SYMBOLICATE_REV=0.3.0
 
-./bin/build_rust.sh minidump-stackwalk https://github.com/rust-minidump/rust-minidump.git $MINIDUMPREV $MINIDUMPREVDATE
-./bin/build_rust.sh symbolicate-stacks https://github.com/mozilla/symbolicate-stacks.git $SYMBOLICATEREV $SYMBOLICATEREVDATE
+$DIR/build_rust_bin_and_version.sh https://github.com/rust-minidump/rust-minidump.git $MINIDUMP_REV minidump-stackwalk 
+$DIR/build_rust_bin_and_version.sh https://github.com/mozilla/symbolicate-stacks.git $SYMBOLICATE_REV symbolicate-stacks 
 
 DATE=$(date +%F)
 
