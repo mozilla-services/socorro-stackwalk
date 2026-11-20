@@ -81,7 +81,8 @@ To regression test changes:
    $ ./bin/generate_regression_data.py crashids.txt
    ```
 
-   This takes 30-40 minutes to run.
+   This takes 30-40 minutes to run. You can optionally pass `--binary minidump-stackwalk` or
+   `--binary symbolicate-stacks` to limit the tests to those related to the given binary.
 
 4. Make the changes to the tools (version updates, patches, etc).
 

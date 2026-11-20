@@ -7,9 +7,9 @@
 """
 Usage: ./bin/generate_regression_data.py [CRASHIDFILE]
 
-This runs minidump-stackwalk on a set of crash ids generating rough regression
-test data. You run it on a set of crash ids before and after a change and then
-look at how things changed.
+This runs minidump-stackwalk and/or symbolicate-stacks on a set of crash ids
+generating rough regression test data. You run it on a set of crash ids before
+and after a change and then look at how things changed.
 """
 
 from abc import ABC, abstractmethod
@@ -27,8 +27,6 @@ import click
 
 
 SYMBOLS_CACHE = pathlib.Path("symbols_cache")
-STACKWALKER = pathlib.Path("build", "bin", "minidump-stackwalk")
-SYMBOLICATE = pathlib.Path("build", "bin", "symbolicate-stacks")
 SYMBOLS_URL = "https://symbols.mozilla.org"
 NUM_TIMES = 5
 
@@ -45,7 +43,7 @@ def get_dump_path(crashdata_dir, crashid):
     return f"{crashdata_dir}/upload_file_minidump/{crashid}"
 
 
-def fetch_data(crashdata_dir, crashid):
+def fetch_data(crashdata_dir, crashid, need_dumps):
     """Fetch raw crash and minidump from Crash Stats."""
     raw_crash = get_raw_crash_path(crashdata_dir, crashid)
     dump = get_dump_path(crashdata_dir, crashid)
@@ -54,16 +52,15 @@ def fetch_data(crashdata_dir, crashid):
         click.echo(f"Already fetched {raw_crash} and {dump}")
         return
 
-    ret = subprocess.run(
-        [
-            "fetch-data",
-            "--raw",
-            "--dumps",
-            crashdata_dir,
-            crashid,
-        ],
-        capture_output=True,
-    )
+    args = [
+        "fetch-data",
+        "--raw",
+    ] + (["--dumps"] if need_dumps else []) + [
+        crashdata_dir,
+        crashid,
+    ]
+
+    ret = subprocess.run(args, capture_output=True)
     stdout = ret.stdout.decode("utf-8")
     stderr = ret.stderr.decode("utf-8")
     if ret.returncode != 0:
@@ -86,6 +83,13 @@ class Test(ABC):
         self.output_dir = regr_dir / self.label
         self.output_dir.mkdir(exist_ok=True)
         self.timing_file = self.output_dir / "timings.csv"
+        self.exe = pathlib.Path("build", "bin", self.binary).absolute().resolve()
+
+        if not self.exe.exists():
+            click.echo(
+                f"{self.exe} does not exist. Please build it first.",
+            )
+            click.get_current_context().exit(1)
 
     class Instance(ABC):
         def __init__(self, test, crashid):
@@ -132,19 +136,14 @@ class Test(ABC):
 
 
 class StackwalkerTest(Test):
+    binary = "minidump-stackwalk"
+
     def __init__(self, regr_dir, crashdata_dir, cache):
         super().__init__(regr_dir, "stackwalker_cache" if cache else "stackwalker_nocache")
         self.cache = cache
         self.symbolscache = SYMBOLS_CACHE
-        self.stackwalker = STACKWALKER.absolute().resolve()
         self.symbolsurl = SYMBOLS_URL
         self.crashdata_dir = crashdata_dir
-
-        if not self.stackwalker.exists():
-            click.echo(
-                f"Stackwalker {self.stackwalker} does not exist. Please build it first.",
-            )
-            click.get_current_context().exit(1)
 
     class Instance(Test.Instance):
         def loop_setup(self):
@@ -160,7 +159,7 @@ class StackwalkerTest(Test):
 
             ret = subprocess.run(
                 [
-                    str(self.test.stackwalker),
+                    str(self.test.exe),
                     f"--evil-json={raw_crash}",
                     f"--symbols-cache={self.test.symbolscache}/cache",
                     f"--symbols-tmp={self.test.symbolscache}/tmp",
@@ -189,18 +188,13 @@ class StackwalkerTest(Test):
 
 
 class SymbolicateTest(Test):
+    binary = "symbolicate-stacks"
+
     def __init__(self, regr_dir, crashdata_dir, cache):
         super().__init__(regr_dir, "symbolicate_cache" if cache else "symbolicate_nocache")
-        self.symbolicate = SYMBOLICATE.absolute().resolve()
         self.symbolscache = SYMBOLS_CACHE
         self.crashdata_dir = crashdata_dir
         self.cache = cache
-
-        if not self.symbolicate.exists():
-            click.echo(
-                f"Symbolicator {self.symbolicate} does not exist. Please build it first.",
-            )
-            click.get_current_context().exit(1)
 
         self.config_file = tempfile.NamedTemporaryFile(mode="w+")
         self.config_file.write(textwrap.dedent(f"""
@@ -222,7 +216,7 @@ class SymbolicateTest(Test):
             annotations = get_raw_crash_path(self.test.crashdata_dir, self.crashid)
             ret = subprocess.run(
                 [
-                    str(self.test.symbolicate),
+                    str(self.test.exe),
                     f"--config-file={self.test.config_file.name}",
                     f"--input-file={annotations}",
                     f"--output-file={self.output_file}",
@@ -253,9 +247,16 @@ def process_crashid(
 
 
 @click.command()
+@click.option("--binary",
+    multiple=True,
+    default="all",
+    help="The binaries to test. May be specified zero or more times.",
+    type=click.Choice([StackwalkerTest.binary,SymbolicateTest.binary]),
+    show_default=True
+)
 @click.argument("crashidfile", type=click.Path(exists=True))
 @click.pass_context
-def main(ctx, crashidfile):
+def main(ctx, binary, crashidfile):
     if "CRASHSTATS_API_TOKEN" not in os.environ:
         click.echo("You need to define CRASHSTATS_API_TOKEN in the environment.")
         ctx.exit(1)
@@ -271,15 +272,15 @@ def main(ctx, crashidfile):
     crashdata_dir = regr_root / "crashdata"
     crashdata_dir.mkdir(parents=True, exist_ok=True)
 
+    # The ordering of tests here is important for correct behavior: for the
+    # stackwalker tests and symbolicate tests, we run the `cache=False` tests
+    # first, and the `cache=True` tests will start with a populated cache from
+    # the prior test run (as desired).
+    #
+    # The symbolicate no-cache tests are run first after the stackwalker tests
+    # so that we can take advantage of it clearing the cache (its use of the
+    # cache dir may be different than that of the stackwalker).
     tests = [
-        # The ordering of tests here is important for correct behavior: for the
-        # stackwalker tests and symbolicate tests, we run the `cache=False`
-        # tests first, and the `cache=True` tests will start with a populated
-        # cache from the prior test run (as desired).
-        #
-        # The symbolicate no-cache tests are run first after the stackwalker
-        # tests so that we can take advantage of it clearing the cache (its use
-        # of the cache dir may be different than that of the stackwalker).
         StackwalkerTest(
             regr_dir=regr_dir,
             crashdata_dir=crashdata_dir,
@@ -302,6 +303,10 @@ def main(ctx, crashidfile):
         ),
     ]
 
+    # Filter out tests based on `--binary`
+    tests = [t for t in tests if t.binary in binary]
+    need_dumps = StackwalkerTest.binary in binary
+
     with open(crashidfile, "r") as fp:
         crashids = fp.readlines()
 
@@ -313,7 +318,7 @@ def main(ctx, crashidfile):
             continue
 
         click.echo(f">>> Working on {crashid} ...")
-        fetch_data(crashdata_dir=str(crashdata_dir), crashid=crashid)
+        fetch_data(crashdata_dir=str(crashdata_dir), crashid=crashid, need_dumps=need_dumps)
 
         try:
             process_crashid(tests, crashid)
