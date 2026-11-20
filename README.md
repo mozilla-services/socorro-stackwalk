@@ -1,6 +1,8 @@
 # README
 
-This is the repository for building minidump-stackwalk and symbolicate-stacks tools for
+This is the repository for building
+[minidump-stackwalk](https://github.com/rust-minidump/rust-minidump) and
+[symbolicate-stacks](https://github.com/mozilla/symbolicate-stacks) tools for
 [Socorro](https://github.com/mozilla-services/socorro).
 
 
@@ -21,9 +23,16 @@ This is the repository for building minidump-stackwalk and symbolicate-stacks to
 
 Once you've built the tools, you can use them. They'll be in `build/bin/`.
 
-If you have [crashstats-tools](https://pypi.org/project/crashstats-tools/) installed and a
-`CRASHSTATS_API_TOKEN`, then you can test the stackwalker with `bin/run_mdsw.sh CRASHID` and the
-symbolicator with `bin/run_symbolicate.sh CRASHID`.
+There are wrapper scripts that run the binaries (and require [API access](#API)):
+- run the stackwalker with `bin/run_mdsw.sh CRASHID`
+- run the symbolicator with `bin/run_symbolicate.sh CRASHID`
+
+
+## API
+Running the wrapper scripts and the regression tests both require that you have
+[crashstats-tools](https://pypi.org/project/crashstats-tools/) installed and a
+`CRASHSTATS_API_TOKEN` env variable set to a token that has the "View Raw Dumps" and "View Personal
+Identifiable Information" permissions.
 
 
 # Submitting bugs
@@ -31,8 +40,11 @@ symbolicator with `bin/run_symbolicate.sh CRASHID`.
 Submit bugs for the socorro-stackwalker build and test scripts in
 [bugzilla](https://bugzilla.mozilla.org/enter_bug.cgi?format=__standard__&product=Socorro&component=General).
 
-Submit bugs for the stackwalker in
-[rust-minidump repo](https://github.com/rust-minidump/rust-minidump/issues).
+Submit bugs for the stackwalker in the [rust-minidump
+repo](https://github.com/rust-minidump/rust-minidump/issues).
+
+Submit bugs for the symbolicator in the [symbolicate-stacks
+repo](https://github.com/mozilla/symbolicate-stacks/issues).
 
 
 # Submitting patches
@@ -44,8 +56,7 @@ Patches are manually verified and tested. At some point, we will change this.
 
 # Regression testing
 
-This requires a `CRASHSTATS_API_TOKEN` with the "View Raw Dumps" and "View Personal Identifiable
-Information" permissions.
+Regression testing requires [API access](#API).
 
 Create a Python virtual environment and install the requirements from
 `requirements-dev.txt`.
@@ -54,11 +65,15 @@ To regression test changes:
 
 1. Build the tools with the main branch.
 
-2. Build a file consisting of crash ids from Crash Stats:
+2. Build a file consisting of crash ids from Crash Stats. Run `supersearch --num=20 >
+   crashids.txt` with the following additional flags to `supersearch`:
 
-   ```
-   $ supersearch --crash_report_keys=StackTraces --crash_report_keys=upload_file_minidump --num=20 > crashids.txt
-   ```
+   - For testing reports with a minidump but no `StackTraces` (always able to be processed by the
+     stackwalker): `--crash_report_keys=upload_file_minidump`
+   - For testing reports with potentially no minidump and `StackTraces` (always able to be processed
+     by the symbolicator): `--crash_report_keys=StackTraces`
+   - For a mix, include both of the above flags (they combine as a binary OR). This set of crashes
+     will be able to be meaningfully processed by the stackwalker, the symbolicator, or both.
 
 3. Run regression tests on it:
 

@@ -30,10 +30,10 @@ class Timing:
 
     @classmethod
     def from_line(cls, line):
-        crashid, t1, t2, t3, t4, t5, cache_size, output_size, output_file = line.strip().split(",")
+        crashid, *timings, cache_size, output_size, output_file = line.strip().split(",")
         return cls(
             crashid=crashid,
-            times=[int(t) for t in [t1, t2, t3, t4, t5]],
+            times=[int(t) for t in timings],
             cache_size=int(cache_size),
             output_size=int(output_size),
             output_file=output_file,

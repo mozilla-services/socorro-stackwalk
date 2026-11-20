@@ -45,18 +45,21 @@ hash fetch-data 2>/dev/null || { echo >&2 "fetch-data is not installed. Run 'pip
 
 mkdir "${DATADIR}" || true
 
+findcrash() {
+    local CRASHID
+    CRASHID=$1
+    find "${DATADIR}/raw_crash/" -name "${CRASHID}" -type f
+}
+
 for CRASHID in "$@"
 do
     # Pull down the data for the crash if we don't have it yet.
-    # We don't need the dumps, but to keep compatibility `run_mdsw.sh`'s use of
-    # the crashdata dir, we download them, too.
-    if [ ! -f "${DATADIR}/upload_file_minidump/${CRASHID}" ]; then
+    if [ -z "$(findcrash ${CRASHID})" ]; then
         echo "Fetching crash data..."
-        fetch-data --raw --dumps "${DATADIR}" "${CRASHID}"
+        fetch-data --raw "${DATADIR}" "${CRASHID}"
     fi
 
-    # Find the raw crash file
-    RAWCRASHFILE=$(find "${DATADIR}/raw_crash/" -name "${CRASHID}" -type f)
+    RAWCRASHFILE=$(findcrash ${CRASHID})
 
     "${SYMBOLICATE}" \
         --config-file="${CONFIG_FILE}" \
