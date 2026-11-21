@@ -30,10 +30,10 @@ class Timing:
 
     @classmethod
     def from_line(cls, line):
-        crashid, t1, t2, t3, t4, t5, cache_size, output_size, output_file = line
+        crashid, *timings, cache_size, output_size, output_file = line.strip().split(",")
         return cls(
             crashid=crashid,
-            times=[int(t) for t in [t1, t2, t3, t4, t5]],
+            times=[int(t) for t in timings],
             cache_size=int(cache_size),
             output_size=int(output_size),
             output_file=output_file,
@@ -43,16 +43,14 @@ class Timing:
         return min(self.times)
 
 
-def stats_regr(d):
-    if d.endswith(os.path.sep):
-        d = d.rstrip(os.path.sep)
+def load_timings(d):
+    timings_file = os.path.join(d, "timings.csv")
+    with open(timings_file, "r") as fp:
+        return [Timing.from_line(line) for line in fp]
 
-    click.echo("nocache_timings")
-    nocache_stats = f"{d}/nocache/timings.csv"
-    with open(nocache_stats, "r") as fp:
-        nocache_timings = [Timing.from_line(line.strip().split(",")) for line in fp]
 
-    for timing in nocache_timings:
+def print_timings(d):
+    for timing in load_timings(d):
         click.echo(
             f"{timing.crashid} -> "
             + f"{timing.best_time()}s  "
@@ -60,51 +58,22 @@ def stats_regr(d):
             + f"output:{timing.output_size:,}b"
         )
 
-    click.echo("")
 
-    click.echo("cache_timings")
-    cache_stats = f"{d}/cache/timings.csv"
-    with open(cache_stats, "r") as fp:
-        cache_timings = [Timing.from_line(line.strip().split(",")) for line in fp]
-
-    for timing in cache_timings:
-        click.echo(
-            f"{timing.crashid} -> "
-            + f"{timing.best_time()}s  "
-            + f"cache:{timing.cache_size:,}kb  "
-            + f"output:{timing.output_size:,}b"
-        )
+def stats_regr(d):
+    subdirs = (f for f in os.listdir(d) if os.path.isdir(os.path.join(d, f)))
+    for sd in subdirs:
+        click.echo(f"{sd} timings")
+        print_timings(os.path.join(d, sd))
+        click.echo("")
 
 
 def compare_regr(d1, d2):
     console = Console()
 
-    if d1.endswith(os.path.sep):
-        d1 = d1.rstrip(os.path.sep)
+    d1_subdirs = set(f for f in os.listdir(d1) if os.path.isdir(os.path.join(d1, f)))
+    d2_subdirs = set(f for f in os.listdir(d2) if os.path.isdir(os.path.join(d2, f)))
 
-    if d2.endswith(os.path.sep):
-        d2 = d2.rstrip(os.path.sep)
-
-    nocache_stats1 = f"{d1}/nocache/timings.csv"
-    with open(nocache_stats1, "r") as fp:
-        timings = [Timing.from_line(line.strip().split(",")) for line in fp]
-        nocache_timings1 = {timing.crashid: timing for timing in timings}
-
-    nocache_stats2 = f"{d2}/nocache/timings.csv"
-    with open(nocache_stats2, "r") as fp:
-        timings = [Timing.from_line(line.strip().split(",")) for line in fp]
-        nocache_timings2 = {timing.crashid: timing for timing in timings}
-
-    table = Table(show_edge=False, show_header=True, show_lines=False, box=None)
-    table.add_column("crashid")
-
-    table.add_column("run1 best time")
-    table.add_column("cache size")
-    table.add_column("output size")
-
-    table.add_column("run2 best time")
-    table.add_column("cache size")
-    table.add_column("output size")
+    subdirs = d1_subdirs & d2_subdirs
 
     def str_and_colorize(left_side, right_side):
         """If both are same--no color. If both are different--yellow."""
@@ -116,28 +85,46 @@ def compare_regr(d1, d2):
         else:
             return (f"{left_side:,}", f"{right_side:,}")
 
-    for key in nocache_timings1.keys():
-        if key not in nocache_timings2:
-            click.echo(f"{key} not in nocache timings right")
-            continue
+    for sd in subdirs:
+        d1_timings = load_timings(os.path.join(d1, sd))
+        d2_timings = load_timings(os.path.join(d2, sd))
 
-        timing1 = nocache_timings1[key]
-        timing2 = nocache_timings2[key]
+        d1_by_crash = {timing.crashid: timing for timing in d1_timings}
+        d2_by_crash = {timing.crashid: timing for timing in d2_timings}
 
-        row = [key]
-        pairs = [
-            str_and_colorize(timing1.best_time(), timing2.best_time()),
-            str_and_colorize(timing1.cache_size, timing2.cache_size),
-            str_and_colorize(timing1.output_size, timing2.output_size),
-        ]
+        table = Table(title = sd, show_edge=False, show_header=True, show_lines=False, box=None)
+        table.add_column("crashid")
 
-        for i in range(len(pairs[0])):
-            for j in range(len(pairs)):
-                row.append(pairs[j][i])
+        table.add_column("run1 best time")
+        table.add_column("cache size")
+        table.add_column("output size")
 
-        table.add_row(*row)
+        table.add_column("run2 best time")
+        table.add_column("cache size")
+        table.add_column("output size")
 
-    console.print(table)
+        for key in d1_by_crash.keys():
+            if key not in d2_by_crash:
+                click.echo(f"{key} not in {sd} timings right side")
+                continue
+
+            timing1 = d1_by_crash[key]
+            timing2 = d2_by_crash[key]
+
+            row = [key]
+            pairs = [
+                str_and_colorize(timing1.best_time(), timing2.best_time()),
+                str_and_colorize(timing1.cache_size, timing2.cache_size),
+                str_and_colorize(timing1.output_size, timing2.output_size),
+            ]
+
+            for i in range(len(pairs[0])):
+                for j in range(len(pairs)):
+                    row.append(pairs[j][i])
+
+            table.add_row(*row)
+
+        console.print(table)
 
 
 @click.command()

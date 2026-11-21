@@ -1,5 +1,5 @@
 # https://hub.docker.com/_/rust/
-FROM rust:1.84.1-bookworm@sha256:738ae99a3d75623f41e6882566b4ef37e38a9840244a47efd4a0ca22e9628b88
+FROM rust:1.88.0-bookworm@sha256:af306cfa71d987911a781c37b59d7d67d934f49684058f96cf72079c3626bfe0
 
 ARG groupid=10001
 ARG userid=10001

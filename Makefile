@@ -48,5 +48,5 @@ shell: my.env .docker-build  ## | Open a shell in the app container.
 
 .PHONY: clean
 clean:  ## | Remove all build, test, coverage, and Python artifacts.
-	-rm -rf .docker-build* build/ crashdata_mdsw_tmp/
+	-rm -rf .docker-build* build/ crashdata_tmp/
 	${DC} rm -f

@@ -11,7 +11,7 @@
 
 set -euo pipefail
 
-DATADIR=./crashdata_mdsw_tmp
+DATADIR=./crashdata_tmp
 STACKWALKER="./build/bin/minidump-stackwalk"
 SYMBOLSCACHE="./symbols_cache"
 
