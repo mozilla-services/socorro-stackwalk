@@ -196,17 +196,6 @@ class SymbolicateTest(Test):
         self.crashdata_dir = crashdata_dir
         self.cache = cache
 
-        self.config_file = tempfile.NamedTemporaryFile(mode="w+")
-        self.config_file.write(textwrap.dedent(f"""
-            [symbol_servers]
-            breakpad = ["{SYMBOLS_URL}"]
-            windows = ["{SYMBOLS_URL}"]
-
-            [cache]
-            directory = "{self.symbolscache}"
-            """))
-        self.config_file.flush()
-
     class Instance(Test.Instance):
         def loop_setup(self):
             if not self.test.cache:
@@ -217,9 +206,11 @@ class SymbolicateTest(Test):
             ret = subprocess.run(
                 [
                     str(self.test.exe),
-                    f"--config-file={self.test.config_file.name}",
                     f"--input-file={annotations}",
                     f"--output-file={self.output_file}",
+                    f"""symbol_servers.breakpad = ["{SYMBOLS_URL}"]""",
+                    f"""symbol_servers.windows = ["{SYMBOLS_URL}"]""",
+                    f"""cache.directory = "{self.test.symbolscache}" """,
                 ],
                 capture_output=True,
             )

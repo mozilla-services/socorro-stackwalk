@@ -21,7 +21,7 @@ source $DIR/utils.sh
 MINIDUMP_REV=v0.27.0
 
 # From: https://github.com/mozilla/symbolicate-stacks
-SYMBOLICATE_REV=0.3.0
+SYMBOLICATE_REV=0.4.0
 
 if [ -n "$(git status --porcelain)" ]; then
     >&2 echo "working directory not clean: refusing to create release"

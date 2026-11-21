@@ -18,18 +18,6 @@ SYMBOLSCACHE="./symbols_cache"
 # This will pull symbols from the symbols server
 SYMBOLS_URL="https://symbols.mozilla.org/try"
 
-CONFIG_FILE="$(mktemp --suffix _symbolicate-stacks-config)"
-trap 'rm -rf -- "$CONFIG_FILE"' EXIT
-
-cat << EOF > "$CONFIG_FILE"
-[symbol_servers]
-breakpad = ["${SYMBOLS_URL}"]
-windows = ["${SYMBOLS_URL}"]
-
-[cache]
-directory = "${SYMBOLSCACHE}"
-EOF
-
 if [[ $# -eq 0 ]]; then
     if [ -t 0 ]; then
         # If stdin is a terminal, then there's no input
@@ -62,7 +50,9 @@ do
     RAWCRASHFILE=$(findcrash ${CRASHID})
 
     "${SYMBOLICATE}" \
-        --config-file="${CONFIG_FILE}" \
         --input-file="${RAWCRASHFILE}" \
-        --output-file="${CRASHID}.dump.json"
+        --output-file="${CRASHID}.dump.json" \
+        "symbol_servers.breakpad = [\"${SYMBOLS_URL}\"]" \
+        "symbol_servers.windows = [\"${SYMBOLS_URL}\"]" \
+        "cache.directory = \"${SYMBOLSCACHE}\""
 done
